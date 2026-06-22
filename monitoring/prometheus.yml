@@ -1,0 +1,27 @@
+global:
+  scrape_interval: 15s      # Default rate to scrape targets
+  evaluation_interval: 15s  # Default rate to assess alerting rules
+  external_labels:
+    monitor: "factory-gpt-orchestrator"
+
+# Scrape configurations targeting isolated services
+scrape_configs:
+  # 1. Prometheus Admin Panel Monitoring
+  - job_name: "prometheus"
+    scrape_interval: 5s
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # 2. High Performance FastAPI Gateway
+  - job_name: "factorygpt-backend"
+    metrics_path: "/metrics"
+    scrape_interval: 5s
+    static_configs:
+      - targets: ["backend:8000"]
+
+  # 3. Active Background worker monitoring (Flower)
+  - job_name: "celery-flower"
+    metrics_path: "/metrics"
+    scrape_interval: 10s
+    static_configs:
+      - targets: ["flower:5555"]

@@ -1,0 +1,9 @@
+{
+  "name": "FactoryGPT",
+  "description": "An AI-powered Smart Factory platform for predictive maintenance and safety detection.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

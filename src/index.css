@@ -1,0 +1,239 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@300;400;700;900&family=IBM+Plex+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Oswald", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --font-bebas: "Bebas Neue", sans-serif;
+
+  --color-bg-machina: #0F0F0D;
+  --color-card-machina: #161614;
+  --color-border-machina: #39352D;
+  --color-text-primary: #E5D8C3;
+  --color-text-secondary: #8A8175;
+  --color-danger-machina: #A8463B;
+  --color-warning-machina: #8A6B3D;
+  --color-accent-machina: #C4A484;
+  --color-hover-machina: #1E1E1B;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg-machina);
+  color: var(--color-text-primary);
+}
+
+/* Custom scrollbars for a tight technical look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-machina);
+  border: 1px solid var(--color-border-machina);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-machina);
+  border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-machina);
+}
+
+/* Remove default focus ring but keep accessible outline with minimal offsets */
+input:focus, select:focus, textarea:focus, button:focus-visible {
+  outline: 1px solid #C4A484;
+  outline-offset: 1px;
+}
+
+/* Screws decoration helpers */
+.screw {
+  width: 6px;
+  height: 6px;
+  background-color: #39352D;
+  border-radius: 50%;
+  position: absolute;
+  box-shadow: inset 1px 1px 1px rgba(0,0,0,0.6);
+}
+.screw::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 0;
+  width: 6px;
+  height: 1px;
+  background-color: #0F0F0D;
+}
+.screw-tl { top: 6px; left: 6px; }
+.screw-tr { top: 6px; right: 6px; }
+.screw-bl { bottom: 6px; left: 6px; }
+.screw-br { bottom: 6px; right: 6px; }
+
+/* Continuous beautiful industrial animations */
+@keyframes pulse-stroke {
+  0% {
+    stroke-width: 3px;
+    filter: drop-shadow(0 0 1px currentColor);
+    stroke-opacity: 0.85;
+  }
+  50% {
+    stroke-width: 4.5px;
+    filter: drop-shadow(0 0 6px currentColor);
+    stroke-opacity: 1;
+  }
+  100% {
+    stroke-width: 3px;
+    filter: drop-shadow(0 0 1px currentColor);
+    stroke-opacity: 0.85;
+  }
+}
+
+.recharts-line-path {
+  animation: pulse-stroke 2.5s infinite ease-in-out;
+}
+
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+.recharts-curve {
+  stroke-dasharray: 6 3;
+  animation: flow-dash 1s infinite linear;
+}
+
+.custom-animated-line {
+  stroke-dasharray: 10 4;
+  animation: flow-dash 1.4s infinite linear;
+  filter: drop-shadow(0 0 2px var(--color-accent-machina, #C4A484));
+}
+
+.custom-animated-line-secondary {
+  stroke-dasharray: 7 3;
+  animation: flow-dash 0.9s infinite linear;
+  filter: drop-shadow(0 0 2px var(--color-danger-machina, #A8463B));
+}
+
+.custom-animated-line-tertiary {
+  stroke-dasharray: 5 2;
+  animation: flow-dash 0.7s infinite linear;
+  filter: drop-shadow(0 0 2px #8A6B3D);
+}
+
+@keyframes laser-sweep {
+  0% { transform: translateY(-50%) scaleY(1); opacity: 0.1; }
+  50% { transform: translateY(50%) scaleY(1.5); opacity: 0.6; }
+  100% { transform: translateY(-50%) scaleY(1); opacity: 0.1; }
+}
+
+.scanner-laser-line {
+  animation: laser-sweep 2s infinite ease-in-out;
+}
+
+@keyframes spinner-gear {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.industrial-spinner-gear {
+  animation: spinner-gear 8s infinite linear;
+}
+
+@keyframes alarm-blink {
+  0%, 100% { background-color: rgba(168, 70, 59, 0.15); border-color: rgba(168, 70, 59, 0.4); }
+  50% { background-color: rgba(168, 70, 59, 0.6); border-color: #A8463B; box-shadow: 0 0 12px #A8463B; }
+}
+
+.machine-alarm-active {
+  animation: alarm-blink 0.8s infinite ease-in-out;
+}
+
+@keyframes pulse-emerald-glow {
+  0%, 100% { border-color: rgba(16, 185, 129, 0.25); box-shadow: inset 0 0 12px rgba(16, 185, 129, 0.05); }
+  50% { border-color: rgba(16, 185, 129, 0.65); box-shadow: inset 0 0 24px rgba(16, 185, 129, 0.15), 0 0 6px rgba(16, 185, 129, 0.05); }
+}
+
+@keyframes pulse-amber-glow {
+  0%, 100% { border-color: rgba(245, 158, 11, 0.15); box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.02); }
+  50% { border-color: rgba(245, 158, 11, 0.45); box-shadow: inset 0 0 18px rgba(245, 158, 11, 0.08); }
+}
+
+.mode-connected-glow {
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  animation: pulse-emerald-glow 2.5s infinite ease-in-out;
+}
+
+.mode-offline-glow {
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  animation: pulse-amber-glow 2.5s infinite ease-in-out;
+}
+
+@keyframes swing-needle {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.gauge-needle {
+  transform-origin: bottom center;
+  animation: swing-needle 3s infinite ease-in-out;
+}
+
+/* Custom Recruiting & Factory Keyframes */
+@keyframes hammer-strike {
+  0% { transform: rotate(0deg); }
+  8% { transform: rotate(-40deg); }
+  16% { transform: rotate(15deg); }
+  20% { transform: rotate(-2deg); }
+  24% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.animate-hammer-hit {
+  animation: hammer-strike 1.8s infinite ease-in-out;
+  transform-origin: 22px 22px;
+}
+
+@keyframes gas-puff-up {
+  0% { transform: translate(0, 0) scale(0.4); opacity: 0; }
+  20% { opacity: 0.85; }
+  100% { transform: translate(0, -32px) scale(1.8); opacity: 0; }
+}
+
+@keyframes gas-puff-side {
+  0% { transform: translate(0, 0) scale(0.3); opacity: 0; }
+  15% { opacity: 0.7; }
+  100% { transform: translate(28px, -20px) scale(1.5); opacity: 0; }
+}
+
+.animate-gas-vent-1 {
+  animation: gas-puff-up 2.2s infinite ease-out;
+}
+
+.animate-gas-vent-2 {
+  animation: gas-puff-side 1.7s infinite ease-out;
+}
+
+@keyframes radar-sonar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-radar-sweep {
+  animation: radar-sonar-sweep 3.5s infinite linear;
+  transform-origin: 16px 16px;
+}
+
+@keyframes laser-scan-horizontal {
+  0%, 100% { transform: translateX(0%); opacity: 0.2; }
+  50% { transform: translateX(100%); opacity: 0.8; }
+}
+
+.animate-laser-scan-x {
+  animation: laser-scan-horizontal 2.5s infinite ease-in-out;
+}
+
+
