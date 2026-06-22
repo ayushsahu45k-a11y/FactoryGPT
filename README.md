@@ -16,11 +16,7 @@
 
 <p align="center">
 
-![React](https://img.shields.io/badge/React-Frontend-black?style=for-the-badge\&logo=react)
-
-![ThreeJS](https://img.shields.io/badge/Three.js-3D%20Engine-black?style=for-the-badge\&logo=three.js)
-
-![TypeScript](https://img.shields.io/badge/TypeScript-Strong%20Typing-blue?style=for-the-badge\&logo=typescript)
+![React](https://img.shields.io/badge/React-Frontend-black?style=for-the-badge\&logo=react)            ![ThreeJS](https://img.shields.io/badge/Three.js-3D%20Engine-black?style=for-the-badge\&logo=three.js)            ![TypeScript](https://img.shields.io/badge/TypeScript-Strong%20Typing-blue?style=for-the-badge\&logo=typescript)
 
 ![Python](https://img.shields.io/badge/Python-AI-yellow?style=for-the-badge\&logo=python)
 
@@ -428,7 +424,7 @@ Clone repository
 
 ```bash
 
-git clone https://github.com/yourusername/FactoryGPT.git
+git clone https://github.com/ayushsahu45k-a11y/FactoryGPT.git
 
 ```
 
@@ -480,15 +476,15 @@ Add:
 
 ```env
 
-VITE_API_URL=
+VITE_API_URL= ********************************************
 
-DATABASE_URL=
+DATABASE_URL= postgresql/**************************/factorygpt
 
-JWT_SECRET=
+JWT_SECRET= f79***********************************************
 
-REDIS_URL=
+REDIS_URL= redis://*************
 
-OPENAI_API_KEY=
+OPENAI_API_KEY= *********************************************
 
 ```
 
@@ -537,11 +533,8 @@ OPENAI_API_KEY=
 Contributions are welcome.
 
 1. Fork the repository
-
 2. Create a feature branch
-
 3. Commit your changes
-
 4. Open a Pull Request
 
 ---
