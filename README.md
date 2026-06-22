@@ -7,11 +7,8 @@
 </p>
 
 <p align="center">
-
 ### Real-Time Smart Manufacturing Digital Twin & AI Operations Copilot
-
 **Industrial 3D Visualization • Explainable AI • Predictive Maintenance • Role-Based Intelligence**
-
 </p>
 
 <p align="center">
