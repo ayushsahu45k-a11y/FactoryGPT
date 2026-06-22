@@ -16,13 +16,9 @@
 
 <p align="center">
 
-![React](https://img.shields.io/badge/React-Frontend-black?style=for-the-badge\&logo=react)            ![ThreeJS](https://img.shields.io/badge/Three.js-3D%20Engine-black?style=for-the-badge\&logo=three.js)            ![TypeScript](https://img.shields.io/badge/TypeScript-Strong%20Typing-blue?style=for-the-badge\&logo=typescript)
+![React](https://img.shields.io/badge/React-Frontend-black?style=for-the-badge\&logo=react)                    ![ThreeJS](https://img.shields.io/badge/Three.js-3D%20Engine-black?style=for-the-badge\&logo=three.js)                    ![TypeScript](https://img.shields.io/badge/TypeScript-Strong%20Typing-blue?style=for-the-badge\&logo=typescript)
 
-![Python](https://img.shields.io/badge/Python-AI-yellow?style=for-the-badge\&logo=python)
-
-![XGBoost](https://img.shields.io/badge/XGBoost-Predictive-orange?style=for-the-badge)
-
-![MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-AI-yellow?style=for-the-badge\&logo=python)                    ![XGBoost](https://img.shields.io/badge/XGBoost-Predictive-orange?style=for-the-badge)                    ![MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 </p>
 
