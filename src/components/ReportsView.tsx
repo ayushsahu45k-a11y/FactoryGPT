@@ -4,7 +4,7 @@ import IndustrialWidget from "./IndustrialWidget";
 import { FileText, Search, Download, Calendar, ShieldCheck, User } from "lucide-react";
 
 export default function ReportsView() {
-  const { reports, readings, incidents, equipment } = useStore();
+  const { reports, readings, incidents, equipment, trackUserEvent } = useStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
 
@@ -65,6 +65,12 @@ export default function ReportsView() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    // Track user event
+    trackUserEvent(
+      "SENSOR TELEMETRY DOWNLOADED", 
+      `Operator downloaded comprehensive multi-asset sensor telemetry database logs [${allReadings.length} records] as CSV file.`
+    );
   };
 
   // Client-side JSON exporter for raw security/compliance incident records
@@ -91,6 +97,12 @@ export default function ReportsView() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    // Track user event
+    trackUserEvent(
+      "SAFETY LOGS EXPORTED", 
+      `Operator exported full safety infractions database logs [${incidents.length} records] as a JSON structure.`
+    );
   };
 
   return (

@@ -3,13 +3,14 @@ import { useStore } from "../store/useStore";
 import { User, Shield, KeyRound, UserCheck, Trash2, Calendar, Clock, Lock, ShieldAlert, CheckCircle2 } from "lucide-react";
 import IndustrialWidget from "./IndustrialWidget";
 import PermissionGuard from "./PermissionGuard";
+import { useEmailValidator } from "../hooks/useEmailValidator";
 
 export default function StaffManagementView() {
   const { user, registeredWorkers, attendance, history, registerWorker, fireWorker } = useStore();
   
   // Registration form state
   const [workerName, setWorkerName] = useState("");
-  const [workerEmail, setWorkerEmail] = useState("");
+  const emailValidator = useEmailValidator("");
   const [workerRole, setWorkerRole] = useState<"Worker" | "Viewer" | "Manager">("Worker");
   
   const [successMsg, setSuccessMsg] = useState("");
@@ -52,20 +53,27 @@ export default function StaffManagementView() {
     setSuccessMsg("");
     setErrorMsg("");
 
-    if (!workerName || !workerEmail) {
+    const targetEmail = emailValidator.email;
+
+    if (!workerName || !targetEmail) {
       setErrorMsg("ERROR: Candidate name or email key cannot be vacant.");
       return;
     }
 
-    if (registeredWorkers.some(w => w.email.toLowerCase() === workerEmail.toLowerCase())) {
+    if (!emailValidator.isValid) {
+      setErrorMsg(emailValidator.validationError || "ERROR: Provided email key formatting is non-compliant.");
+      return;
+    }
+
+    if (registeredWorkers.some(w => w.email.toLowerCase() === targetEmail.toLowerCase())) {
       setErrorMsg("ERROR: Provided email key already registered in facility database.");
       return;
     }
 
-    registerWorker(workerName, workerEmail, workerRole);
+    registerWorker(workerName, targetEmail, workerRole);
     setSuccessMsg(`SUCCESSFULLY REGISTERED "${workerName.toUpperCase()}" AS [${workerRole.toUpperCase()}]`);
     setWorkerName("");
-    setWorkerEmail("");
+    emailValidator.setEmail("");
   };
 
   // Compile all shifts logs combining login, logout and safety scans
@@ -115,12 +123,17 @@ export default function StaffManagementView() {
                 </label>
                 <input
                   type="email"
-                  value={workerEmail}
-                  onChange={(e) => setWorkerEmail(e.target.value)}
+                  value={emailValidator.rawEmail}
+                  onChange={(e) => emailValidator.setEmail(e.target.value)}
                   placeholder="name@factorygpt.lan"
                   className="w-full bg-bg-machina border border-border-machina px-3 py-2 text-xs text-text-primary focus:border-accent-machina focus:outline-none"
                   required
                 />
+                {emailValidator.rawEmail && !emailValidator.isValid && (
+                  <span className="text-[8px] text-danger-machina block mt-1 leading-normal uppercase">
+                    {emailValidator.validationError}
+                  </span>
+                )}
               </div>
 
               <div>

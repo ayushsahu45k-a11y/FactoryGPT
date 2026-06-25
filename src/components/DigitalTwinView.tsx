@@ -24,7 +24,9 @@ import {
   Maximize2,
   Shield,
   Eye,
-  Minimize2
+  Minimize2,
+  X,
+  Lock
 } from "lucide-react";
 
 interface ComponentNode {
@@ -409,6 +411,10 @@ export default function DigitalTwinView() {
   // '2d' - Standard detailed orthographic floor plan blueprint
   // 'split' - Connected HUD panel: interactive 3D map synchronized with flat 2D blueprint radar 
   const [layoutMode, setLayoutMode] = useState<"3d" | "2d" | "split">("split");
+
+  // Show / hide state for overlay HUDs on the map for high visibility
+  const [showPerspectiveAdapters, setShowPerspectiveAdapters] = useState<boolean>(true);
+  const [showInspectionHUD, setShowInspectionHUD] = useState<boolean>(true);
   
   // Selected themepreset for styling
   const [themeKey, setThemeKey] = useState<ThemeKey>("ERANGEL");
@@ -685,6 +691,7 @@ export default function DigitalTwinView() {
       setShowEfficiencyKPIs(false);
       setShowMaintenanceTasks(true);
       setShowSafetyZones(true);
+      setShowThermalHeatmap(false); // Restricted for Workers (requires L-3 Manager/Admin)
     } else if (selectedRole === "admin") {
       setShowEfficiencyKPIs(true);
       setShowMaintenanceTasks(true);
@@ -693,6 +700,9 @@ export default function DigitalTwinView() {
       setShowEfficiencyKPIs(false);
       setShowMaintenanceTasks(false);
       setShowSafetyZones(false);
+      setShowWorkers(false);        // Restricted for Viewers (requires L-2)
+      setShowPipelines(false);      // Restricted for Viewers (requires L-2)
+      setShowThermalHeatmap(false); // Restricted for Viewers (requires L-3)
     }
   }, [selectedRole]);
 
@@ -1146,7 +1156,32 @@ export default function DigitalTwinView() {
               "Co-acting workspace showing interactive rotatable 3D landscape paired with instant 2D telemetry coordinates"
             }
             headerAction={
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
+                {/* Restore Closed HUD Toggles */}
+                {!showPerspectiveAdapters && (
+                  <button
+                    onClick={() => setShowPerspectiveAdapters(true)}
+                    className="text-[9px] font-mono px-2 py-1.5 uppercase font-black border transition-all flex items-center gap-1.5 rounded-[1px] bg-emerald-950/40 text-emerald-400 border-emerald-900/60 hover:bg-emerald-900/50 cursor-pointer"
+                    title="Restore Perspective Adapters on Map"
+                  >
+                    <Radio size={10} className="text-emerald-400 animate-pulse" />
+                    <span>+ OPEN ADAPTERS</span>
+                  </button>
+                )}
+                {!showInspectionHUD && (
+                  <button
+                    onClick={() => setShowInspectionHUD(true)}
+                    className="text-[9px] font-mono px-2 py-1.5 uppercase font-black border transition-all flex items-center gap-1.5 rounded-[1px] bg-emerald-950/40 text-emerald-400 border-emerald-900/60 hover:bg-emerald-900/50 cursor-pointer"
+                    title="Restore Automated Inspection on Map"
+                  >
+                    <Eye size={10} className="text-emerald-400 animate-pulse" />
+                    <span>+ OPEN INSPECTION</span>
+                  </button>
+                )}
+                {(!showPerspectiveAdapters || !showInspectionHUD) && (
+                  <div className="w-[1px] h-3.5 bg-border-machina/60 mx-1 hidden sm:block"></div>
+                )}
+
                 <button
                   id="btn-layout-split"
                   onClick={() => setLayoutMode("split")}
@@ -1203,332 +1238,387 @@ export default function DigitalTwinView() {
               )}
 
               {/* AUTOMATED INSPECTION TOUR HUD (MANAGEMENT REVIEW PANEL) */}
-              <div className="absolute top-3 right-3 bg-[#0d0d0f]/95 border border-border-machina p-3 font-mono text-[9px] text-text-secondary rounded-[2px] backdrop-blur-md space-y-2 text-left select-none w-[250px] z-20 shadow-xl pointer-events-auto">
-                <div className="flex justify-between items-center">
-                  <div className="text-accent-machina font-black uppercase tracking-widest text-[9px] flex items-center gap-1.5">
-                    <span className="relative flex h-2 w-2">
-                      {isTourActive && (
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      )}
-                      <span className={`relative inline-flex rounded-full h-2 w-2 ${isTourActive ? "bg-red-500" : "bg-zinc-600"}`}></span>
-                    </span>
-                    <span>AUTOMATED INSPECTION</span>
+              {showInspectionHUD && (
+                <div className="absolute top-3 right-3 bg-[#0d0d0f]/95 border border-border-machina p-3 font-mono text-[9px] text-text-secondary rounded-[2px] backdrop-blur-md space-y-2 text-left select-none w-[250px] z-20 shadow-xl pointer-events-auto">
+                  <div className="flex justify-between items-center">
+                    <div className="text-accent-machina font-black uppercase tracking-widest text-[9px] flex items-center gap-1.5">
+                      <span className="relative flex h-2 w-2">
+                        {isTourActive && (
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        )}
+                        <span className={`relative inline-flex rounded-full h-2 w-2 ${isTourActive ? "bg-red-500" : "bg-zinc-600"}`}></span>
+                      </span>
+                      <span>AUTOMATED INSPECTION</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[7px] text-zinc-500 font-bold uppercase">MGT REVIEW</span>
+                      <button
+                        onClick={() => setShowInspectionHUD(false)}
+                        className="text-zinc-500 hover:text-rose-500 transition-colors p-0.5 border border-border-machina/40 hover:border-rose-500/30 bg-black/40 rounded-[1px] cursor-pointer flex items-center justify-center"
+                        title="Close Automated Inspection HUD"
+                      >
+                        <X size={9} />
+                      </button>
+                    </div>
                   </div>
-                  <span className="text-[7px] text-zinc-500 font-bold uppercase">MGT REVIEW</span>
-                </div>
-                
-                <div className="h-[1px] bg-border-machina/60 my-1"></div>
+                  
+                  <div className="h-[1px] bg-border-machina/60 my-1"></div>
 
-                {isTourActive ? (
-                  <div className="space-y-1.5 bg-black/40 p-2 border border-border-machina/60 rounded-[1px]">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[7.5px] text-zinc-500">ACTIVE SEGMENT ({tourStep + 1}/{TOUR_STEPS.length}):</span>
-                      <span className="text-[8px] bg-accent-machina/10 text-accent-machina px-1 rounded-[1px] font-black uppercase shadow-sm">STEPPING</span>
+                  {isTourActive ? (
+                    <div className="space-y-1.5 bg-black/40 p-2 border border-border-machina/60 rounded-[1px]">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[7.5px] text-zinc-500">ACTIVE SEGMENT ({tourStep + 1}/{TOUR_STEPS.length}):</span>
+                        <span className="text-[8px] bg-accent-machina/10 text-accent-machina px-1 rounded-[1px] font-black uppercase shadow-sm">STEPPING</span>
+                      </div>
+                      <div className="text-[9.5px] font-black text-white uppercase leading-normal tracking-wide">
+                        {TOUR_STEPS[tourStep]?.name}
+                      </div>
+                      <div className="text-[7.5px] text-zinc-400 uppercase font-bold flex items-center gap-1">
+                        <span className="inline-block w-1.5 h-1.5 bg-amber-500"></span>
+                        <span>{TOUR_STEPS[tourStep]?.sector}</span>
+                      </div>
+
+                      <div className="h-[1px] bg-border-machina/40 my-1"></div>
+
+                      {/* Safety Sensor Readouts in Sequence */}
+                      <div className="space-y-1 text-[8.5px]">
+                        <div className="text-[7px] text-zinc-500 uppercase font-black">CRITICAL SAFETY READOUTS:</div>
+                        {TOUR_STEPS[tourStep]?.safetySensors.map((sensor, sIdx) => {
+                          let badgeColor = "bg-emerald-500";
+                          let textColor = "text-emerald-400";
+                          if (sensor.status === "warning") {
+                            badgeColor = "bg-amber-500";
+                            textColor = "text-amber-400";
+                          } else if (sensor.status === "critical") {
+                            badgeColor = "bg-red-500 animate-pulse";
+                            textColor = "text-[#ff6b6b] font-extrabold";
+                          }
+                          return (
+                            <div key={sIdx} className="flex justify-between items-center bg-black/20 p-1 border border-border-machina/30">
+                              <span className="text-zinc-400">{sensor.label}:</span>
+                              <span className={`font-mono flex items-center gap-1 ${textColor}`}>
+                                <span className={`w-1 h-1 rounded-full ${badgeColor}`}></span>
+                                {sensor.value}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="h-[1px] bg-border-machina/40 my-1"></div>
+
+                      <div className="space-y-1 text-[8px]">
+                        <span className="text-zinc-500 uppercase block">ZONE STATE OVERVIEW:</span>
+                        <p className="text-text-primary uppercase leading-tight text-[8px] italic">
+                          "{TOUR_STEPS[tourStep]?.operationalStatus}"
+                        </p>
+                      </div>
+
+                      {/* Real-time progression bar (duration based) */}
+                      <div className="space-y-1 pt-1.5">
+                        <div className="flex justify-between text-[7px] text-zinc-500">
+                          <span>SEGMENT PROGRESS:</span>
+                          <span>{((tourSecondsElapsed / (TOUR_STEPS[tourStep]?.duration || 6)) * 100).toFixed(0)}%</span>
+                        </div>
+                        <div className="w-full bg-[#1e1e24] h-[3px] rounded-full overflow-hidden">
+                          <div 
+                            className="bg-accent-machina h-[3px] transition-all duration-1000 ease-linear"
+                            style={{ width: `${(tourSecondsElapsed / (TOUR_STEPS[tourStep]?.duration || 6)) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-[9.5px] font-black text-white uppercase leading-normal tracking-wide">
-                      {TOUR_STEPS[tourStep]?.name}
-                    </div>
-                    <div className="text-[7.5px] text-zinc-400 uppercase font-bold flex items-center gap-1">
-                      <span className="inline-block w-1.5 h-1.5 bg-amber-500"></span>
-                      <span>{TOUR_STEPS[tourStep]?.sector}</span>
-                    </div>
-
-                    <div className="h-[1px] bg-border-machina/40 my-1"></div>
-
-                    {/* Safety Sensor Readouts in Sequence */}
-                    <div className="space-y-1 text-[8.5px]">
-                      <div className="text-[7px] text-zinc-500 uppercase font-black">CRITICAL SAFETY READOUTS:</div>
-                      {TOUR_STEPS[tourStep]?.safetySensors.map((sensor, sIdx) => {
-                        let badgeColor = "bg-emerald-500";
-                        let textColor = "text-emerald-400";
-                        if (sensor.status === "warning") {
-                          badgeColor = "bg-amber-500";
-                          textColor = "text-amber-400";
-                        } else if (sensor.status === "critical") {
-                          badgeColor = "bg-red-500 animate-pulse";
-                          textColor = "text-[#ff6b6b] font-extrabold";
-                        }
-                        return (
-                          <div key={sIdx} className="flex justify-between items-center bg-black/20 p-1 border border-border-machina/30">
-                            <span className="text-zinc-400">{sensor.label}:</span>
-                            <span className={`font-mono flex items-center gap-1 ${textColor}`}>
-                              <span className={`w-1 h-1 rounded-full ${badgeColor}`}></span>
-                              {sensor.value}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    <div className="h-[1px] bg-border-machina/40 my-1"></div>
-
-                    <div className="space-y-1 text-[8px]">
-                      <span className="text-zinc-500 uppercase block">ZONE STATE OVERVIEW:</span>
-                      <p className="text-text-primary uppercase leading-tight text-[8px] italic">
-                        "{TOUR_STEPS[tourStep]?.operationalStatus}"
+                  ) : (
+                    <div className="space-y-1.5 py-3 text-center text-zinc-500 bg-black/20 border border-dashed border-border-machina/50 rounded-[1px]">
+                      <span className="block text-[8px] font-bold text-zinc-400">TOUR SYSTEM STANDBY</span>
+                      <p className="text-[7.5px] leading-relaxed mx-2">
+                        Initiate programmatic inspection sequence sweep of all critical factory sectors for management safety review.
                       </p>
                     </div>
+                  )}
 
-                    {/* Real-time progression bar (duration based) */}
-                    <div className="space-y-1 pt-1.5">
-                      <div className="flex justify-between text-[7px] text-zinc-500">
-                        <span>SEGMENT PROGRESS:</span>
-                        <span>{((tourSecondsElapsed / (TOUR_STEPS[tourStep]?.duration || 6)) * 100).toFixed(0)}%</span>
-                      </div>
-                      <div className="w-full bg-[#1e1e24] h-[3px] rounded-full overflow-hidden">
-                        <div 
-                          className="bg-accent-machina h-[3px] transition-all duration-1000 ease-linear"
-                          style={{ width: `${(tourSecondsElapsed / (TOUR_STEPS[tourStep]?.duration || 6)) * 100}%` }}
-                        ></div>
-                      </div>
+                  {/* Control Actions Column */}
+                  <div className="grid grid-cols-2 gap-1.5 pt-1">
+                    <button
+                      onClick={() => {
+                        setIsTourActive(!isTourActive);
+                        setIsRotating(false);
+                        if (!isTourActive) {
+                          // Initialize first step target camera
+                          const currentStepData = TOUR_STEPS[tourStep];
+                          targetYawRef.current = currentStepData.camera.yaw;
+                          targetPitchRef.current = currentStepData.camera.pitch;
+                          targetZoomRef.current = currentStepData.camera.zoom;
+                          setHoveredHotspot(currentStepData.id);
+                        } else {
+                          // Stop tour, return to standard orbiting
+                          targetYawRef.current = null;
+                          targetPitchRef.current = null;
+                          targetZoomRef.current = null;
+                          setIsRotating(true);
+                        }
+                      }}
+                      className={`px-2 py-1.5 border text-[8px] uppercase font-black text-center flex items-center justify-center gap-1 rounded-[1px] cursor-pointer transition-all ${
+                        isTourActive 
+                          ? "bg-[#ff6b6b]/20 text-[#ff6b6b] border-[#ff6b6b] hover:bg-[#ff6b6b]/30" 
+                          : "bg-card-machina text-accent-machina border-border-machina hover:border-accent-machina"
+                      }`}
+                    >
+                      <Play size={10} className={isTourActive ? "hidden" : "inline"} />
+                      <span>{isTourActive ? "STOP INSPECT" : "START MGT TOUR"}</span>
+                    </button>
+                    
+                    <div className="flex gap-1">
+                      <button
+                        disabled={!isTourActive}
+                        onClick={() => {
+                          setTourStep((s) => (s - 1 + TOUR_STEPS.length) % TOUR_STEPS.length);
+                          setTourSecondsElapsed(0);
+                        }}
+                        className="flex-1 px-1 py-1.5 border border-border-machina bg-bg-machina hover:text-text-primary text-[8px] uppercase font-bold text-center rounded-[1px] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                      >
+                        PREV
+                      </button>
+                      <button
+                        disabled={!isTourActive}
+                        onClick={() => {
+                          setTourStep((s) => (s + 1) % TOUR_STEPS.length);
+                          setTourSecondsElapsed(0);
+                        }}
+                        className="flex-1 px-1 py-1.5 border border-border-machina bg-bg-machina hover:text-text-primary text-[8px] uppercase font-bold text-center rounded-[1px] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                      >
+                        NEXT
+                      </button>
                     </div>
                   </div>
-                ) : (
-                  <div className="space-y-1.5 py-3 text-center text-zinc-500 bg-black/20 border border-dashed border-border-machina/50 rounded-[1px]">
-                    <span className="block text-[8px] font-bold text-zinc-400">TOUR SYSTEM STANDBY</span>
-                    <p className="text-[7.5px] leading-relaxed mx-2">
-                      Initiate programmatic inspection sequence sweep of all critical factory sectors for management safety review.
-                    </p>
-                  </div>
-                )}
-
-                {/* Control Actions Column */}
-                <div className="grid grid-cols-2 gap-1.5 pt-1">
-                  <button
-                    onClick={() => {
-                      setIsTourActive(!isTourActive);
-                      setIsRotating(false);
-                      if (!isTourActive) {
-                        // Initialize first step target camera
-                        const currentStepData = TOUR_STEPS[tourStep];
-                        targetYawRef.current = currentStepData.camera.yaw;
-                        targetPitchRef.current = currentStepData.camera.pitch;
-                        targetZoomRef.current = currentStepData.camera.zoom;
-                        setHoveredHotspot(currentStepData.id);
-                      } else {
-                        // Stop tour, return to standard orbiting
-                        targetYawRef.current = null;
-                        targetPitchRef.current = null;
-                        targetZoomRef.current = null;
-                        setIsRotating(true);
-                      }
-                    }}
-                    className={`px-2 py-1.5 border text-[8px] uppercase font-black text-center flex items-center justify-center gap-1 rounded-[1px] cursor-pointer transition-all ${
-                      isTourActive 
-                        ? "bg-[#ff6b6b]/20 text-[#ff6b6b] border-[#ff6b6b] hover:bg-[#ff6b6b]/30" 
-                        : "bg-card-machina text-accent-machina border-border-machina hover:border-accent-machina"
-                    }`}
-                  >
-                    <Play size={10} className={isTourActive ? "hidden" : "inline"} />
-                    <span>{isTourActive ? "STOP INSPECT" : "START MGT TOUR"}</span>
-                  </button>
-                  
-                  <div className="flex gap-1">
-                    <button
-                      disabled={!isTourActive}
-                      onClick={() => {
-                        setTourStep((s) => (s - 1 + TOUR_STEPS.length) % TOUR_STEPS.length);
-                        setTourSecondsElapsed(0);
-                      }}
-                      className="flex-1 px-1 py-1.5 border border-border-machina bg-bg-machina hover:text-text-primary text-[8px] uppercase font-bold text-center rounded-[1px] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-                    >
-                      PREV
-                    </button>
-                    <button
-                      disabled={!isTourActive}
-                      onClick={() => {
-                        setTourStep((s) => (s + 1) % TOUR_STEPS.length);
-                        setTourSecondsElapsed(0);
-                      }}
-                      className="flex-1 px-1 py-1.5 border border-border-machina bg-bg-machina hover:text-text-primary text-[8px] uppercase font-bold text-center rounded-[1px] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-                    >
-                      NEXT
-                    </button>
-                  </div>
                 </div>
-              </div>
+              )}
 
               {/* TACTICAL FLOATING ZOOM & AUTO-ROTATION CONTROLS ON THE MAP CANVAS */}
-              <div className="absolute top-3 left-3 bg-[#0d0d0f]/90 border border-border-machina p-2.5 font-mono text-[9px] text-text-secondary rounded-[2px] backdrop-blur space-y-1.5 text-left select-none max-w-[210px] z-20 shadow-lg pointer-events-auto">
-                <div className="text-accent-machina font-black uppercase tracking-widest text-[9px] flex items-center gap-1.5">
-                  <Radio size={10} className="animate-pulse" />
-                  <span>PERSPECTIVE ADAPTERS</span>
-                </div>
-                <div className="h-[1px] bg-border-machina my-1"></div>
-                
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setIsRotating(!isRotating)}
-                    className={`px-1 rounded-[1px] py-0.5 border text-[8px] uppercase font-bold text-center flex-1 ${
-                      isRotating ? "bg-accent-machina text-[#0e0e0e] border-accent-machina" : "bg-[#18181a] text-text-secondary border-border-machina"
-                    }`}
-                  >
-                    {isRotating ? "AUTO-ROT NOM" : "AUTO-ROT OFF"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setYaw(315);
-                      setPitch(45);
-                      setZoom(1.55);
-                      if (addHistory) addHistory("SYSTEM_RESET", "PERSPECTIVE RESET", "Returned rotatable maps viewport angle definitions to system defaults.");
-                    }}
-                    className="px-1 py-0.5 border border-border-machina bg-[#18181a] hover:text-text-primary text-[8px] uppercase font-medium rounded-[1px]"
-                  >
-                    RESET
-                  </button>
-                </div>
-
-                {/* ADVANCED CAMERA PRESETS */}
-                <div className="grid grid-cols-2 gap-1.5 pt-0.5">
-                  <button
-                    onClick={() => {
-                      targetYawRef.current = 315; targetPitchRef.current = 45; targetZoomRef.current = 1.4; setIsRotating(false);
-                      if (addHistory) addHistory("SYSTEM_RESET", "CAM_ISO", "Aligned virtual camera to high-contrast 3D Isometric default.");
-                    }}
-                    className="px-1 py-0.5 border border-border-machina bg-[#141519] text-text-secondary hover:text-accent-machina text-[7.5px] uppercase font-black tracking-wider rounded-[1.5px] truncate cursor-pointer"
-                  >
-                    ISO VIEW
-                  </button>
-                  <button
-                    onClick={() => {
-                      targetYawRef.current = 270; targetPitchRef.current = 85; targetZoomRef.current = 1.1; setIsRotating(false);
-                      if (addHistory) addHistory("SYSTEM_RESET", "CAM_OVERHEAD", "Aligned virtual camera to 2D Planar Orthogonal view.");
-                    }}
-                    className="px-1 py-0.5 border border-border-machina bg-[#141519] text-text-secondary hover:text-accent-machina text-[7.5px] uppercase font-black tracking-wider rounded-[1.5px] truncate cursor-pointer"
-                  >
-                    BIRD'S EYE
-                  </button>
-                  <button
-                    onClick={() => {
-                      targetYawRef.current = 225; targetPitchRef.current = 40; targetZoomRef.current = 2.1; setIsRotating(false);
-                      if (addHistory) addHistory("SYSTEM_RESET", "CAM_REACTOR", "Focused high-zoom optic telemetry matrices on Reactor core.");
-                    }}
-                    className="px-1 py-0.5 border border-border-machina bg-[#141519] text-text-secondary hover:text-accent-machina text-[7.5px] uppercase font-black tracking-wider rounded-[1.5px] truncate cursor-pointer"
-                  >
-                    REACTOR CAM
-                  </button>
-                  <button
-                    onClick={() => {
-                      targetYawRef.current = 45; targetPitchRef.current = 35; targetZoomRef.current = 1.85; setIsRotating(false);
-                      if (addHistory) addHistory("SYSTEM_RESET", "CAM_FURNACE", "Focused high-zoom optic telemetry matrices on Furnace bed.");
-                    }}
-                    className="px-1 py-0.5 border border-border-machina bg-[#141519] text-text-secondary hover:text-accent-machina text-[7.5px] uppercase font-black tracking-wider rounded-[1.5px] truncate cursor-pointer"
-                  >
-                    FURNACE CAM
-                  </button>
-                </div>
-
-                <div className="space-y-1 pt-1 text-[8px]">
-                  <div className="flex justify-between">
-                    <span>PAN CAMERA YAW:</span>
-                    <span className="text-text-primary font-bold">{yaw.toFixed(0)}°</span>
+              {showPerspectiveAdapters && (
+                <div className="absolute top-3 left-3 bg-[#0d0d0f]/90 border border-border-machina p-2.5 font-mono text-[9px] text-text-secondary rounded-[2px] backdrop-blur space-y-1.5 text-left select-none max-w-[210px] z-20 shadow-lg pointer-events-auto">
+                  <div className="flex justify-between items-center">
+                    <div className="text-accent-machina font-black uppercase tracking-widest text-[9px] flex items-center gap-1.5">
+                      <Radio size={10} className="animate-pulse" />
+                      <span>PERSPECTIVE ADAPTERS</span>
+                    </div>
+                    <button
+                      onClick={() => setShowPerspectiveAdapters(false)}
+                      className="text-zinc-500 hover:text-rose-500 transition-colors p-0.5 border border-border-machina/40 hover:border-rose-500/30 bg-black/40 rounded-[1px] cursor-pointer flex items-center justify-center"
+                      title="Close Perspective Adapters Panel"
+                    >
+                      <X size={9} />
+                    </button>
                   </div>
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="360" 
-                    value={yaw.toFixed(0)}
-                    onChange={(e) => {
-                      setYaw(Number(e.target.value));
-                      setIsRotating(false);
-                      targetYawRef.current = null;
-                    }}
-                    className="w-full accent-accent-machina bg-[#1a1a1e]"
-                  />
-
-                  <div className="flex justify-between">
-                    <span>PAN CAMERA PITCH:</span>
-                    <span className="text-text-primary font-bold">{pitch.toFixed(0)}°</span>
+                  <div className="h-[1px] bg-border-machina my-1"></div>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setIsRotating(!isRotating)}
+                      className={`px-1 rounded-[1px] py-0.5 border text-[8px] uppercase font-bold text-center flex-1 ${
+                        isRotating ? "bg-accent-machina text-[#0e0e0e] border-accent-machina" : "bg-[#18181a] text-text-secondary border-border-machina"
+                      }`}
+                    >
+                      {isRotating ? "AUTO-ROT NOM" : "AUTO-ROT OFF"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setYaw(315);
+                        setPitch(45);
+                        setZoom(1.55);
+                        if (addHistory) addHistory("SYSTEM_RESET", "PERSPECTIVE RESET", "Returned rotatable maps viewport angle definitions to system defaults.");
+                      }}
+                      className="px-1 py-0.5 border border-border-machina bg-[#18181a] hover:text-text-primary text-[8px] uppercase font-medium rounded-[1px]"
+                    >
+                      RESET
+                    </button>
                   </div>
-                  <input 
-                    type="range" 
-                    min="15" 
-                    max="85" 
-                    value={pitch.toFixed(0)}
-                    onChange={(e) => {
-                      setPitch(Number(e.target.value));
-                      setIsRotating(false);
-                      targetPitchRef.current = null;
-                    }}
-                    className="w-full accent-accent-machina bg-[#1a1a1e]"
-                  />
 
-                  <div className="flex justify-between">
-                    <span>ZOOM GRID INDEX:</span>
-                    <span className="text-text-primary font-bold">{zoom.toFixed(2)}x</span>
+                  {/* ADVANCED CAMERA PRESETS */}
+                  <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                    <button
+                      onClick={() => {
+                        targetYawRef.current = 315; targetPitchRef.current = 45; targetZoomRef.current = 1.4; setIsRotating(false);
+                        if (addHistory) addHistory("SYSTEM_RESET", "CAM_ISO", "Aligned virtual camera to high-contrast 3D Isometric default.");
+                      }}
+                      className="px-1 py-0.5 border border-border-machina bg-[#141519] text-text-secondary hover:text-accent-machina text-[7.5px] uppercase font-black tracking-wider rounded-[1.5px] truncate cursor-pointer"
+                    >
+                      ISO VIEW
+                    </button>
+                    <button
+                      onClick={() => {
+                        targetYawRef.current = 270; targetPitchRef.current = 85; targetZoomRef.current = 1.1; setIsRotating(false);
+                        if (addHistory) addHistory("SYSTEM_RESET", "CAM_OVERHEAD", "Aligned virtual camera to 2D Planar Orthogonal view.");
+                      }}
+                      className="px-1 py-0.5 border border-border-machina bg-[#141519] text-text-secondary hover:text-accent-machina text-[7.5px] uppercase font-black tracking-wider rounded-[1.5px] truncate cursor-pointer"
+                    >
+                      BIRD'S EYE
+                    </button>
+                    <button
+                      onClick={() => {
+                        targetYawRef.current = 225; targetPitchRef.current = 40; targetZoomRef.current = 2.1; setIsRotating(false);
+                        if (addHistory) addHistory("SYSTEM_RESET", "CAM_REACTOR", "Focused high-zoom optic telemetry matrices on Reactor core.");
+                      }}
+                      className="px-1 py-0.5 border border-border-machina bg-[#141519] text-text-secondary hover:text-accent-machina text-[7.5px] uppercase font-black tracking-wider rounded-[1.5px] truncate cursor-pointer"
+                    >
+                      REACTOR CAM
+                    </button>
+                    <button
+                      onClick={() => {
+                        targetYawRef.current = 45; targetPitchRef.current = 35; targetZoomRef.current = 1.85; setIsRotating(false);
+                        if (addHistory) addHistory("SYSTEM_RESET", "CAM_FURNACE", "Focused high-zoom optic telemetry matrices on Furnace bed.");
+                      }}
+                      className="px-1 py-0.5 border border-border-machina bg-[#141519] text-text-secondary hover:text-accent-machina text-[7.5px] uppercase font-black tracking-wider rounded-[1.5px] truncate cursor-pointer"
+                    >
+                      FURNACE CAM
+                    </button>
                   </div>
-                  <input 
-                    type="range" 
-                    min="1.0" 
-                    max="2.5" 
-                    step="0.05"
-                    value={zoom}
-                    onChange={(e) => {
-                      setZoom(Number(e.target.value));
-                      targetZoomRef.current = null;
-                    }}
-                    className="w-full accent-accent-machina bg-[#1a1a1e]"
-                  />
-                </div>
 
-                <div className="h-[1px] bg-border-machina my-1"></div>
-                <div className="flex flex-col gap-1.5 pt-1">
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="checkbox"
-                      id="chk-blueprints-overlay"
-                      checked={showBlueprintsOverlay}
-                      onChange={() => setShowBlueprintsOverlay(!showBlueprintsOverlay)}
-                      className="accent-accent-machina w-3 h-3 cursor-pointer"
+                  <div className="space-y-1 pt-1 text-[8px]">
+                    <div className="flex justify-between">
+                      <span>PAN CAMERA YAW:</span>
+                      <span className="text-text-primary font-bold">{yaw.toFixed(0)}°</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="360" 
+                      value={yaw.toFixed(0)}
+                      onChange={(e) => {
+                        setYaw(Number(e.target.value));
+                        setIsRotating(false);
+                        targetYawRef.current = null;
+                      }}
+                      className="w-full accent-accent-machina bg-[#1a1a1e]"
                     />
-                    <label htmlFor="chk-blueprints-overlay" className="cursor-pointer select-none text-[8px] font-bold text-text-primary uppercase">
-                      2D SCANNERS ON FLOOR
-                    </label>
+
+                    <div className="flex justify-between">
+                      <span>PAN CAMERA PITCH:</span>
+                      <span className="text-text-primary font-bold">{pitch.toFixed(0)}°</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="15" 
+                      max="85" 
+                      value={pitch.toFixed(0)}
+                      onChange={(e) => {
+                        setPitch(Number(e.target.value));
+                        setIsRotating(false);
+                        targetPitchRef.current = null;
+                      }}
+                      className="w-full accent-accent-machina bg-[#1a1a1e]"
+                    />
+
+                    <div className="flex justify-between">
+                      <span>ZOOM GRID INDEX:</span>
+                      <span className="text-text-primary font-bold">{zoom.toFixed(2)}x</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="1.0" 
+                      max="2.5" 
+                      step="0.05"
+                      value={zoom}
+                      onChange={(e) => {
+                        setZoom(Number(e.target.value));
+                        targetZoomRef.current = null;
+                      }}
+                      className="w-full accent-accent-machina bg-[#1a1a1e]"
+                    />
                   </div>
 
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="checkbox"
-                      id="chk-show-workers"
-                      checked={showWorkers}
-                      onChange={() => setShowWorkers(!showWorkers)}
-                      className="accent-accent-machina w-3 h-3 cursor-pointer"
-                    />
-                    <label htmlFor="chk-show-workers" className="cursor-pointer select-none text-[8px] font-bold text-text-primary uppercase flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-[#00f0ff] rounded-full inline-block"></span>
-                      <span>TRACK ACTIVE WORKERS</span>
-                    </label>
-                  </div>
+                  <div className="h-[1px] bg-border-machina my-1"></div>
+                  <div className="flex flex-col gap-1.5 pt-1">
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="checkbox"
+                        id="chk-blueprints-overlay"
+                        checked={showBlueprintsOverlay}
+                        onChange={() => setShowBlueprintsOverlay(!showBlueprintsOverlay)}
+                        className="accent-accent-machina w-3 h-3 cursor-pointer"
+                      />
+                      <label htmlFor="chk-blueprints-overlay" className="cursor-pointer select-none text-[8px] font-bold text-text-primary uppercase">
+                        2D SCANNERS ON FLOOR
+                      </label>
+                    </div>
 
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="checkbox"
-                      id="chk-show-pipelines"
-                      checked={showPipelines}
-                      onChange={() => setShowPipelines(!showPipelines)}
-                      className="accent-accent-machina w-3 h-3 cursor-pointer"
-                    />
-                    <label htmlFor="chk-show-pipelines" className="cursor-pointer select-none text-[8px] font-bold text-text-primary uppercase flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-[#a855f7] rounded-full inline-block"></span>
-                      <span>SHOW SYSTEM PIPELINES</span>
-                    </label>
-                  </div>
+                    {/* TRACK ACTIVE WORKERS */}
+                    {user?.role === "Viewer" ? (
+                      <div className="flex items-center gap-1.5 opacity-60 font-mono select-none">
+                        <Lock size={9} className="text-rose-500/90 shrink-0" />
+                        <span className="text-[8px] font-bold text-text-secondary uppercase flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 bg-zinc-700 rounded-full inline-block"></span>
+                          <span>TRACK ACTIVE WORKERS <span className="text-rose-400 font-black">[L-2 REQ]</span></span>
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="checkbox"
+                          id="chk-show-workers"
+                          checked={showWorkers}
+                          onChange={() => setShowWorkers(!showWorkers)}
+                          className="accent-accent-machina w-3 h-3 cursor-pointer"
+                        />
+                        <label htmlFor="chk-show-workers" className="cursor-pointer select-none text-[8px] font-bold text-text-primary uppercase flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 bg-[#00f0ff] rounded-full inline-block"></span>
+                          <span>TRACK ACTIVE WORKERS</span>
+                        </label>
+                      </div>
+                    )}
 
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="checkbox"
-                      id="chk-show-heatmap"
-                      checked={showThermalHeatmap}
-                      onChange={() => setShowThermalHeatmap(!showThermalHeatmap)}
-                      className="accent-accent-machina w-3 h-3 cursor-pointer"
-                    />
-                    <label htmlFor="chk-show-heatmap" className="cursor-pointer select-none text-[8px] font-bold text-text-primary uppercase flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-[#ef4444] rounded-full inline-block"></span>
-                      <span>THERMOGRAPHY OVERLAYS</span>
-                    </label>
+                    {/* SHOW SYSTEM PIPELINES */}
+                    {user?.role === "Viewer" ? (
+                      <div className="flex items-center gap-1.5 opacity-60 font-mono select-none">
+                        <Lock size={9} className="text-rose-500/90 shrink-0" />
+                        <span className="text-[8px] font-bold text-text-secondary uppercase flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 bg-zinc-700 rounded-full inline-block"></span>
+                          <span>SHOW SYSTEM PIPELINES <span className="text-rose-400 font-black">[L-2 REQ]</span></span>
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="checkbox"
+                          id="chk-show-pipelines"
+                          checked={showPipelines}
+                          onChange={() => setShowPipelines(!showPipelines)}
+                          className="accent-accent-machina w-3 h-3 cursor-pointer"
+                        />
+                        <label htmlFor="chk-show-pipelines" className="cursor-pointer select-none text-[8px] font-bold text-text-primary uppercase flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 bg-[#a855f7] rounded-full inline-block"></span>
+                          <span>SHOW SYSTEM PIPELINES</span>
+                        </label>
+                      </div>
+                    )}
+
+                    {/* THERMOGRAPHY OVERLAYS */}
+                    {user?.role === "Viewer" || user?.role === "Worker" ? (
+                      <div className="flex items-center gap-1.5 opacity-60 font-mono select-none">
+                        <Lock size={9} className="text-rose-500/90 shrink-0" />
+                        <span className="text-[8px] font-bold text-text-secondary uppercase flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 bg-zinc-700 rounded-full inline-block"></span>
+                          <span>THERMOGRAPHY OVERLAYS <span className="text-rose-400 font-black">[L-3 REQ]</span></span>
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="checkbox"
+                          id="chk-show-heatmap"
+                          checked={showThermalHeatmap}
+                          onChange={() => setShowThermalHeatmap(!showThermalHeatmap)}
+                          className="accent-accent-machina w-3 h-3 cursor-pointer"
+                        />
+                        <label htmlFor="chk-show-heatmap" className="cursor-pointer select-none text-[8px] font-bold text-text-primary uppercase flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 bg-[#ef4444] rounded-full inline-block"></span>
+                          <span>THERMOGRAPHY OVERLAYS</span>
+                        </label>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* VIEWPORTS CONTAINER RENDERING LAYOUT MODES */}
               <div className="relative w-full aspect-[16/9] min-h-[460px] flex transition-all duration-300">
@@ -1536,7 +1626,7 @@ export default function DigitalTwinView() {
                 {/* 3D RENDERING WORKSPACE OR SPLIT MAP LEFT SCREEN */}
                 {(layoutMode === "3d" || layoutMode === "split") && (
                   <div className={`relative h-full flex-1 overflow-hidden flex items-center justify-center ${layoutMode === "split" ? "border-r border-border-machina" : ""}`}>
-                    
+
                     {/* SVG canvas supporting manual dragging for camera orbit */}
                     <svg
                       width="100%"

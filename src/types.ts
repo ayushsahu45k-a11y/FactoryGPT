@@ -84,7 +84,7 @@ export interface HistoryRecord {
   userEmail: string;
   workerName: string;
   role: UserRole;
-  category: "AUTHENTICATION" | "SAFETY_SCAN" | "ALARM_CLEARANCE" | "EQUIPMENT_MAINTENANCE" | "WORKER_REGISTRATION" | "ATTENDANCE" | "COPILOT" | "SYSTEM_RESET";
+  category: "AUTHENTICATION" | "SAFETY_SCAN" | "ALARM_CLEARANCE" | "EQUIPMENT_MAINTENANCE" | "WORKER_REGISTRATION" | "ATTENDANCE" | "COPILOT" | "SYSTEM_RESET" | "PAGE_VIEW" | "USER_EVENT";
   title: string;
   description: string;
 }

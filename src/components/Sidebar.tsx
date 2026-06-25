@@ -536,6 +536,36 @@ export default function Sidebar() {
                 </div>
               </div>
 
+              {/* Row 4: Compliance Documentation */}
+              <div className="p-3 bg-zinc-950 border border-border-machina space-y-1">
+                <span className="text-zinc-500 text-[8px] font-black uppercase block">OPERATIVE PRIVACY & COMPLIANCE AGREEMENT</span>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[9px] font-mono text-zinc-400 pt-0.5 select-none">
+                  <button
+                    type="button"
+                    onClick={() => window.dispatchEvent(new CustomEvent("factorygpt-open-privacy"))}
+                    className="hover:text-accent-machina hover:underline font-bold uppercase cursor-pointer text-left"
+                  >
+                    🔒 PRIVACY POLICY
+                  </button>
+                  <span>•</span>
+                  <button
+                    type="button"
+                    onClick={() => window.dispatchEvent(new CustomEvent("factorygpt-open-terms"))}
+                    className="hover:text-accent-machina hover:underline font-bold uppercase cursor-pointer text-left"
+                  >
+                    ⚖️ TERMS OF SERVICE
+                  </button>
+                  <span>•</span>
+                  <button
+                    type="button"
+                    onClick={() => window.dispatchEvent(new CustomEvent("factorygpt-open-preferences"))}
+                    className="hover:text-accent-machina hover:underline font-bold uppercase cursor-pointer text-left"
+                  >
+                    🍪 COOKIES
+                  </button>
+                </div>
+              </div>
+
             </div>
 
             {/* Heavy Tactical disconnect buttons */}

@@ -225,6 +225,39 @@ export const API_CLIENT = {
   async login(email: string, pass: string, mode: "connected" | "demo"): Promise<User> {
     if (mode === "demo") {
       // Offline/simulation bypass
+      if (email.includes("viewer")) {
+        return {
+          id: "usr-viewer-01",
+          email: "operator.viewer@factorygpt.lan",
+          full_name: "Standard Floor Observer",
+          role: "Viewer",
+          permissions: ["Viewer"],
+          is_active: true,
+          created_at: new Date().toISOString()
+        };
+      }
+      if (email.includes("manager")) {
+        return {
+          id: "usr-manager-01",
+          email: "patel.manager@factorygpt.lan",
+          full_name: "Operations Manager Robert Vance",
+          role: "Manager",
+          permissions: ["Manager", "Viewer"],
+          is_active: true,
+          created_at: new Date().toISOString()
+        };
+      }
+      if (email.includes("worker")) {
+        return {
+          id: "usr-worker-01",
+          email: "miller.worker@factorygpt.lan",
+          full_name: "Field Operations Specialist",
+          role: "Worker",
+          permissions: ["Viewer"],
+          is_active: true,
+          created_at: new Date().toISOString()
+        };
+      }
       if (email.includes("operator") || pass === "factory") {
         return MOCK_USER;
       }

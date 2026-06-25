@@ -16,9 +16,11 @@ import SettingsView from "./components/SettingsView";
 import AttendanceView from "./components/AttendanceView";
 import StaffManagementView from "./components/StaffManagementView";
 import HistoryView from "./components/HistoryView";
+import PermissionCheckWrapper from "./components/PermissionCheckWrapper";
 import { ShieldAlert, AlertTriangle } from "lucide-react";
 import { alarmEngine } from "./lib/audio";
 import IronNutButton from "./components/IronNutButton";
+import LegalConsentSystem from "./components/LegalConsentSystem";
 
 interface ToastMessage {
   id: string;
@@ -28,6 +30,95 @@ interface ToastMessage {
   level: "nominal" | "warning" | "critical" | "emergency";
   timestamp: string;
   createdAt?: number;
+}
+
+// Toast individual tracker component with high-resolution frame-by-frame progress estimation
+const ToastItem: React.FC<{ toast: ToastMessage; onRemove: () => void }> = ({ toast, onRemove }) => {
+  const isEmergency = toast.level === "emergency";
+  const isCritical = toast.level === "critical";
+  const isCriticalEmergency = isEmergency || isCritical;
+
+  const [timeLeft, setTimeLeft] = React.useState(5000);
+
+  React.useEffect(() => {
+    if (isCriticalEmergency) return;
+
+    const start = toast.createdAt || Date.now();
+    let animFrameId: number;
+
+    const update = () => {
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, 5000 - elapsed);
+      setTimeLeft(remaining);
+
+      if (remaining > 0) {
+        animFrameId = requestAnimationFrame(update);
+      }
+    };
+
+    animFrameId = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(animFrameId);
+  }, [toast.createdAt, isCriticalEmergency]);
+
+  const progressPercent = isCriticalEmergency ? 100 : (timeLeft / 5000) * 100;
+
+  const alertColor = isCriticalEmergency ? "text-danger-machina" : "text-warning-machina";
+  const pulseClass = isCriticalEmergency ? "animate-pulse border-danger-machina/60 shadow-[0_0_15px_rgba(235,94,85,0.25)] bg-[#1a0a0a]" : "bg-card-machina";
+
+  return (
+    <div
+      className={`pointer-events-auto border-l-4 p-5 pb-6 shadow-none transition-all duration-150 relative flex gap-3 border-r border-t border-b border-border-machina ${pulseClass}`}
+      style={{
+        borderLeftColor: isCriticalEmergency ? "var(--color-danger-machina)" : "var(--color-warning-machina)"
+      }}
+    >
+      <div className="screw screw-tl"></div>
+      <div className="screw screw-tr"></div>
+      <div className="screw screw-bl"></div>
+      <div className="screw screw-br"></div>
+
+      {/* Alert Icon matching compliance style */}
+      <div className="mt-0.5 shrink-0">
+        {toast.type === "safety_non_compliant" ? (
+          <ShieldAlert size={16} className={alertColor} />
+        ) : (
+          <AlertTriangle size={16} className={alertColor} />
+        )}
+      </div>
+
+      {/* Message Details */}
+      <div className="space-y-1.5 pr-4 flex-1">
+        <span className={`text-[10px] font-black uppercase tracking-[0.16em] block leading-none flex items-center gap-1.5 ${alertColor}`}>
+          <span className={`w-1.5 h-1.5 ${isEmergency ? "bg-danger-machina animate-ping" : "bg-warning-machina"}`}></span>
+          {toast.title} {isCriticalEmergency && "[CRITICAL PINNED]"}
+        </span>
+        <p className="text-[11px] leading-relaxed text-text-primary">{toast.message}</p>
+        <div className="flex items-center gap-2 text-[9px] text-text-secondary">
+          <span>REGISTRY: ENFORCER_EDGE_L4</span>
+          <span>•</span>
+          <span>{toast.timestamp}</span>
+        </div>
+      </div>
+
+      {/* Close button that looks like an iron nut */}
+      <div className="absolute top-2.5 right-2.5">
+        <IronNutButton
+          onClick={onRemove}
+          title="Press iron nut to close message"
+        />
+      </div>
+
+      {/* Progress Bar for Non-critical Alerts */}
+      {!isCriticalEmergency && (
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-900/60 overflow-hidden">
+          <div 
+            className="h-full bg-warning-machina/60 transition-all duration-[16ms] ease-linear"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function App() {
@@ -187,7 +278,12 @@ export default function App() {
 
   // If no active operator session exists, gate with the secure lock screen
   if (!user) {
-    return <LoginView />;
+    return (
+      <>
+        <LoginView />
+        <LegalConsentSystem />
+      </>
+    );
   }
 
   // Dynamic route dispatcher
@@ -206,9 +302,17 @@ export default function App() {
       case "model_explorer":
         return <ModelExplorer />;
       case "analytics":
-        return <AnalyticsView />;
+        return (
+          <PermissionCheckWrapper requiredRole="Manager" viewName="Deep Analytics">
+            <AnalyticsView />
+          </PermissionCheckWrapper>
+        );
       case "twin":
-        return <DigitalTwinView />;
+        return (
+          <PermissionCheckWrapper requiredRole="Manager" viewName="Digital Twin 3D Platform">
+            <DigitalTwinView />
+          </PermissionCheckWrapper>
+        );
       case "reports":
         return <ReportsView />;
       case "alerts":
@@ -216,7 +320,11 @@ export default function App() {
       case "copilot":
         return <CopilotView />;
       case "staff_mgmt":
-        return <StaffManagementView />;
+        return (
+          <PermissionCheckWrapper requiredRole="Manager" viewName="Staff Register Terminal">
+            <StaffManagementView />
+          </PermissionCheckWrapper>
+        );
       case "settings":
         return <SettingsView />;
       default:
@@ -251,61 +359,17 @@ export default function App() {
             return (b.createdAt || 0) - (a.createdAt || 0); // Chronological sub-sort (newer first)
           });
 
-          return sortedToasts.map((toast) => {
-            // Color accents based on severity level
-            const isEmergency = toast.level === "emergency";
-            const isCritical = toast.level === "critical";
-            const isCriticalEmergency = isEmergency || isCritical;
-            
-            const alertColor = isCriticalEmergency ? "text-danger-machina" : "text-warning-machina";
-            const borderStyle = isCriticalEmergency ? "border-l-danger-machina" : "border-l-warning-machina";
-            const pulseClass = isCriticalEmergency ? "animate-pulse border-danger-machina/60 shadow-[0_0_15px_rgba(235,94,85,0.25)] bg-[#1a0a0a]" : "bg-card-machina";
-
-            return (
-              <div
-                key={toast.id}
-                className={`pointer-events-auto border-l-4 p-5 shadow-none transition-all duration-150 relative flex gap-3 ${borderStyle} ${pulseClass} border-r border-t border-b border-border-machina`}
-              >
-                <div className="screw screw-tl"></div>
-                <div className="screw screw-tr"></div>
-                <div className="screw screw-bl"></div>
-                <div className="screw screw-br"></div>
-
-                {/* Alert Icon matching compliance style */}
-                <div className="mt-0.5 shrink-0">
-                  {toast.type === "safety_non_compliant" ? (
-                    <ShieldAlert size={16} className={alertColor} />
-                  ) : (
-                    <AlertTriangle size={16} className={alertColor} />
-                  )}
-                </div>
-
-                {/* Message Details */}
-                <div className="space-y-1.5 pr-4">
-                  <span className={`text-[10px] font-black uppercase tracking-[0.16em] block leading-none flex items-center gap-1.5 ${alertColor}`}>
-                    <span className={`w-1.5 h-1.5 ${isEmergency ? "bg-danger-machina animate-ping" : "bg-warning-machina"}`}></span>
-                    {toast.title} {isCriticalEmergency && "[CRITICAL PINNED]"}
-                  </span>
-                  <p className="text-[11px] leading-relaxed text-text-primary">{toast.message}</p>
-                  <div className="flex items-center gap-2 text-[9px] text-text-secondary">
-                    <span>REGISTRY: ENFORCER_EDGE_L4</span>
-                    <span>•</span>
-                    <span>{toast.timestamp}</span>
-                  </div>
-                </div>
-
-                {/* Close button that looks like an iron nut */}
-                <div className="absolute top-2.5 right-2.5">
-                  <IronNutButton
-                    onClick={() => removeToast(toast.id)}
-                    title="Press iron nut to close message"
-                  />
-                </div>
-              </div>
-            );
-          });
+          return sortedToasts.map((toast) => (
+            <ToastItem
+              key={toast.id}
+              toast={toast}
+              onRemove={() => removeToast(toast.id)}
+            />
+          ));
         })()}
       </div>
+
+      <LegalConsentSystem />
     </div>
   );
 }

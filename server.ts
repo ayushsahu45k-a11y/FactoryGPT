@@ -319,14 +319,30 @@ app.post("/api/v1/auth/login", (req, res) => {
   
   // Custom auth matching
   const nameFromEmail = email.split("@")[0].replace(/[._]/g, " ").toUpperCase() || "FACILITY CO-WORKER";
-  const userRole = email.includes("manager") ? "Manager" as const : email.includes("operator") || email.includes("admin") ? "Admin" as const : "Worker" as const;
+  const userRole = email.includes("viewer")
+    ? "Viewer" as const
+    : email.includes("manager")
+      ? "Manager" as const
+      : (email.includes("admin") || (email.includes("operator") && !email.includes("viewer")))
+        ? "Admin" as const
+        : "Worker" as const;
   
   const userObj: User = {
     id: `usr-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
     email: email,
-    full_name: userRole === "Admin" ? "Technical Specialist Connor Devlin" : userRole === "Manager" ? "Operations Manager Robert Vance" : nameFromEmail,
+    full_name: userRole === "Admin"
+      ? "Technical Specialist Connor Devlin"
+      : userRole === "Manager"
+        ? "Operations Manager Robert Vance"
+        : userRole === "Viewer"
+          ? "Standard Floor Observer"
+          : nameFromEmail,
     role: userRole,
-    permissions: userRole === "Admin" ? ["Admin", "Manager", "Viewer"] : userRole === "Manager" ? ["Manager", "Viewer"] : ["Viewer"],
+    permissions: userRole === "Admin"
+      ? ["Admin", "Manager", "Viewer"]
+      : userRole === "Manager"
+        ? ["Manager", "Viewer"]
+        : ["Viewer"],
     is_active: true,
     created_at: new Date().toISOString(),
   };

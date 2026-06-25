@@ -40,16 +40,21 @@ export default function HistoryView() {
   const [entryStatus, setEntryStatus] = useState<string | null>(null);
 
   // Determine user-scoped baseline history based on user's active role security tier.
-  // Workers can ONLY view their own records for strict privacy compliance.
   const roleScopedBaseLogs = useMemo(() => {
     if (!user) return [];
-    if (user.role === "Worker") {
-      // Worker Carter / Riggs gets private worker logs
-      return history.filter(
-        (log) => log.userEmail === user.email || log.category === "SYSTEM_RESET"
-      );
+    if (user.role === "Viewer") {
+      // make viewer only show viewer data
+      return history.filter((log) => log.role === "Viewer");
     }
-    // Admin, Manager, and read-only Audience Viewers see the global flow
+    if (user.role === "Worker") {
+      // worker only shows workers data (and logs that belong to them)
+      return history.filter((log) => log.role === "Worker" || log.userEmail === user.email);
+    }
+    if (user.role === "Manager") {
+      // manager can see all the data accept admin
+      return history.filter((log) => log.role !== "Admin");
+    }
+    // admin see all of them
     return history;
   }, [history, user]);
 
@@ -115,6 +120,10 @@ export default function HistoryView() {
         return "bg-sky-950/70 text-sky-400 border-sky-900";
       case "SYSTEM_RESET":
         return "bg-red-950/70 text-red-400 border-red-900";
+      case "PAGE_VIEW":
+        return "bg-blue-950/70 text-blue-400 border-blue-900";
+      case "USER_EVENT":
+        return "bg-pink-950/70 text-pink-400 border-pink-900";
       default:
         return "bg-zinc-900 text-zinc-400 border-zinc-800";
     }
@@ -195,7 +204,11 @@ export default function HistoryView() {
           <p className="text-[10px] text-text-secondary font-mono tracking-wider mt-1 uppercase font-bold">
             {user.role === "Worker" 
               ? `Showing localized personal activity for ${user.full_name} (${user.email}).` 
-              : "Comprehensive system activities logs mapped across operators, security events, and AI triggers."}
+              : user.role === "Viewer"
+                ? `Showing standard visitor audit logs. (Level L-1 Clearance)`
+                : user.role === "Manager"
+                  ? "Displaying Manager, Worker, and Viewer activities logs. Admin-level data is cryptographically hidden."
+                  : "Comprehensive system activities logs mapped across operators, security events, and AI triggers."}
           </p>
         </div>
 
@@ -309,12 +322,14 @@ export default function HistoryView() {
                   <option value="COPILOT">COPILOT EVENTS</option>
                   <option value="ATTENDANCE">SHIFT ATTENDANCE</option>
                   <option value="SYSTEM_RESET">SYSTEM REALLOCATION</option>
+                  <option value="PAGE_VIEW">PAGE VIEWS</option>
+                  <option value="USER_EVENT">USER EVENTS</option>
                 </select>
               </div>
 
-              {/* Filter by Worker role (Only visible for non-worker tiers) */}
+              {/* Filter by Worker role (Only visible for non-worker/non-viewer tiers) */}
               <div>
-                {user.role === "Worker" ? (
+                {(user.role === "Worker" || user.role === "Viewer") ? (
                   <button
                     disabled
                     className="w-full bg-[#0d0d0b]/40 border border-border-machina/60 opacity-60 text-zinc-500 text-[9.5px] py-2 font-black uppercase tracking-wide cursor-not-allowed rounded-[1.5px] text-center"
@@ -328,7 +343,7 @@ export default function HistoryView() {
                     className="w-full bg-[#0d0d0b] border border-border-machina px-2.5 py-2 text-[9.5px] font-black focus:border-accent-machina focus:outline-none uppercase cursor-pointer rounded-[1.5px] text-text-primary"
                   >
                     <option value="ALL">ALL OPERATIVE ROLES</option>
-                    <option value="Admin">ADMIN ROLE</option>
+                    {user.role === "Admin" && <option value="Admin">ADMIN ROLE</option>}
                     <option value="Manager">MANAGER ROLE</option>
                     <option value="Worker">WORKER ROLE</option>
                     <option value="Viewer">VIEWER ROLE</option>
@@ -533,6 +548,8 @@ export default function HistoryView() {
                     <option value="SAFETY_SCAN">SAFETY COMPLIANCE SCAN</option>
                     <option value="ALARM_CLEARANCE">ALARM RE-ACTIVATION CLEARANCE</option>
                     <option value="SYSTEM_RESET">SYSTEM REALLOCATION FLUSH</option>
+                    <option value="PAGE_VIEW">MANUAL PAGE WORKSPACE SHIFT</option>
+                    <option value="USER_EVENT">MANUAL RECORDED USER EVENT</option>
                   </select>
                 </div>
 

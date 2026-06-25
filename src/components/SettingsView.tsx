@@ -69,8 +69,12 @@ function TabRestrictedLock({ requiredRoles, activeRole, tabLabel }: TabRestricte
 }
 
 export default function SettingsView() {
-  const { mode, setMode, addEquipment, equipment, user, setUser, addHistory } = useStore();
+  const { mode, setMode, addEquipment, equipment, user, setUser, addHistory, history } = useStore();
   const [activeSubTab, setActiveSubTab] = useState<"global" | "manager" | "admin" | "worker">("global");
+
+  // Audit trail state
+  const [auditSearch, setAuditSearch] = useState("");
+  const [auditFilter, setAuditFilter] = useState<"ALL" | "AUTHENTICATION" | "SYSTEM_RESET" | "WORKER_REGISTRATION" | "ALARM_CLEARANCE">("ALL");
 
   // Registration Form State (SYS-299)
   const [eqName, setEqName] = useState("");
@@ -183,6 +187,13 @@ export default function SettingsView() {
 
       // Save into our Zustand list
       addEquipment(responseItem);
+
+      // Log administrative action
+      addHistory(
+        "WORKER_REGISTRATION",
+        "MACHINERY ASSET REGISTERED",
+        `Operator registered machinery asset '${responseItem.name}' (S/N: ${responseItem.serial_number}, Type: ${responseItem.model_type}) in ${responseItem.zone}.`
+      );
 
       setSuccessMsg(`Asset '${responseItem.name}' joined the active factory ledger catalog.`);
       setEqName("");
@@ -596,6 +607,17 @@ export default function SettingsView() {
                           />
                         </div>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          addHistory("SYSTEM_RESET", "KERNEL PORT INGRESS MOUNTED", `Re-routed core kernel service port ingress to bind on Host ${ingressIp} via port ${ingressPort}.`);
+                          alert("SYS CONFIRMATION: KERNEL BINDINGS COMMITTED TO SECURITY LEDGER");
+                        }}
+                        className="w-full py-2 bg-[#1c0e10] hover:bg-[#2c1518] border border-rose-500/20 text-rose-400 font-black text-[9px] uppercase tracking-widest rounded-[2px] cursor-pointer mt-2"
+                      >
+                        💾 SAVE KERNEL BINDINGS
+                      </button>
                     </div>
 
                     <div className="bg-[#0b0c0e] p-4 border border-zinc-800 rounded-[2px] space-y-4 font-sans">
@@ -873,6 +895,65 @@ export default function SettingsView() {
           </IndustrialWidget>
 
           <IndustrialWidget
+            title="LEGAL & COMPLIANCE REGISTRY"
+            subtitle="Review regulatory policies & consent preferences"
+          >
+            <div className="space-y-3 font-mono">
+              <p className="text-[10px] text-text-secondary leading-normal mb-2 uppercase font-bold">
+                Verification logs for GDPR Article 6 & OSHA standard 1910 rules. Click any ledger to inspect compliance bounds.
+              </p>
+              
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("factorygpt-open-privacy"))}
+                className="w-full text-left bg-zinc-950 hover:bg-zinc-900 border border-border-machina p-3 flex items-center justify-between transition-colors cursor-pointer"
+              >
+                <div className="space-y-0.5">
+                  <span className="text-[10px] text-text-primary font-black block uppercase">
+                    🔒 PRIVACY POLICY DISCLOSURE
+                  </span>
+                  <span className="text-[8px] text-zinc-500 block uppercase">
+                    STATUS: COMPLIANT (SOP-PP-9001)
+                  </span>
+                </div>
+                <span className="text-[9px] text-accent-machina font-bold">VIEW LEDGER →</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("factorygpt-open-terms"))}
+                className="w-full text-left bg-zinc-950 hover:bg-zinc-900 border border-border-machina p-3 flex items-center justify-between transition-colors cursor-pointer"
+              >
+                <div className="space-y-0.5">
+                  <span className="text-[10px] text-text-primary font-black block uppercase">
+                    ⚖️ TERMS OF SERVICE (T&C)
+                  </span>
+                  <span className="text-[8px] text-zinc-500 block uppercase">
+                    STATUS: ACTIVE (SOP-TOS-1910)
+                  </span>
+                </div>
+                <span className="text-[9px] text-accent-machina font-bold">VIEW LEDGER →</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("factorygpt-open-preferences"))}
+                className="w-full text-left bg-zinc-950 hover:bg-zinc-900 border border-border-machina p-3 flex items-center justify-between transition-colors cursor-pointer"
+              >
+                <div className="space-y-0.5">
+                  <span className="text-[10px] text-text-primary font-black block uppercase">
+                    🍪 COOKIE & TELEMETRY PREFERENCES
+                  </span>
+                  <span className="text-[8px] text-zinc-500 block uppercase">
+                    STATUS: CONFIGURED (GDPR-EU)
+                  </span>
+                </div>
+                <span className="text-[9px] text-accent-machina font-bold">MANAGE →</span>
+              </button>
+            </div>
+          </IndustrialWidget>
+
+          <IndustrialWidget
             title="REGISTER NEW MACHINERY ASSET"
             subtitle="Inject a brand-new mechanical asset into the active operations grid"
           >
@@ -966,6 +1047,162 @@ export default function SettingsView() {
         </div>
 
       </div>
+
+      {/* --- AUDIT TRAIL TELEMETRY --- */}
+      <div id="audit-trail-telemetry-panel" className="mt-6">
+        {!(user?.role === "Admin" || user?.role === "Manager") ? (
+          <TabRestrictedLock
+            requiredRoles={["Manager", "Admin"]}
+            activeRole={user?.role || "Viewer"}
+            tabLabel="OPERATIONAL AUDIT TRAIL & SYSTEM COMPLIANCE REGISTER"
+          />
+        ) : (
+          <IndustrialWidget
+            title="OPERATIONAL AUDIT TRAIL & SYSTEM COMPLIANCE REGISTER"
+            subtitle="Chronological sequence tracking operative logins, administrative parameter shifts, and asset registry adjustments."
+          >
+          {/* Controls: Filter and Search */}
+          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-4 font-mono select-none">
+            {/* Search Input */}
+            <div className="relative flex-1 max-w-md">
+              <input
+                type="text"
+                value={auditSearch}
+                onChange={(e) => setAuditSearch(e.target.value)}
+                placeholder="SEARCH OPERATOR, ROLE, OR TRANSACTION KEY..."
+                className="w-full bg-black border border-border-machina px-3 py-1.5 pl-8 text-[10px] text-text-primary placeholder-text-secondary/60 focus:border-accent-machina focus:outline-none uppercase font-bold"
+              />
+              <span className="absolute left-2.5 top-2.2 text-zinc-500 text-[10px] font-bold">//</span>
+            </div>
+
+            {/* Filter buttons */}
+            <div className="flex bg-[#0d0d0b] border border-border-machina/60 p-0.5 rounded-[1.5px] text-[8px] font-black uppercase overflow-x-auto">
+              {[
+                { id: "ALL", label: "ALL AUDITS" },
+                { id: "AUTHENTICATION", label: "LOGINS" },
+                { id: "SYSTEM_RESET", label: "CONFIG SHIFTS" },
+                { id: "WORKER_REGISTRATION", label: "ASSET SHIFTS" },
+                { id: "ALARM_CLEARANCE", label: "ALARM CLEARS" }
+              ].map((btn) => (
+                <button
+                  key={btn.id}
+                  onClick={() => setAuditFilter(btn.id as any)}
+                  className={`px-2.5 py-1 cursor-pointer rounded-[1px] whitespace-nowrap ${
+                    auditFilter === btn.id
+                      ? "bg-accent-machina text-bg-machina font-black"
+                      : "text-text-secondary hover:text-text-primary hover:bg-zinc-900/40"
+                  }`}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Table container */}
+          <div className="border border-border-machina/50 bg-[#080807] rounded-[2px] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left font-mono border-collapse">
+                <thead>
+                  <tr className="border-b border-border-machina bg-black/80 text-[8.5px] text-text-secondary uppercase select-none font-black tracking-wider">
+                    <th className="p-3 pl-4 w-[150px]">TIMESTAMP</th>
+                    <th className="p-3 w-[150px]">OPERATOR / EMAIL</th>
+                    <th className="p-3 w-[100px]">CLEARANCE</th>
+                    <th className="p-3 w-[150px]">CATEGORY / KEY</th>
+                    <th className="p-3">TRANSACTION LOG</th>
+                  </tr>
+                </thead>
+                <tbody className="text-[9.5px]">
+                  {(() => {
+                    const auditLogs = (history || []).filter((h) => {
+                      const isRelevant = ["AUTHENTICATION", "SYSTEM_RESET", "WORKER_REGISTRATION", "ALARM_CLEARANCE"].includes(h.category);
+                      if (!isRelevant) return false;
+
+                      if (auditFilter !== "ALL" && h.category !== auditFilter) return false;
+
+                      if (auditSearch.trim()) {
+                        const query = auditSearch.toLowerCase();
+                        return (
+                          h.title.toLowerCase().includes(query) ||
+                          h.description.toLowerCase().includes(query) ||
+                          h.userEmail.toLowerCase().includes(query) ||
+                          h.workerName.toLowerCase().includes(query) ||
+                          h.role.toLowerCase().includes(query)
+                        );
+                      }
+                      return true;
+                    });
+
+                    if (auditLogs.length > 0) {
+                      return auditLogs.map((log, idx) => {
+                        let badgeColor = "bg-zinc-900 text-zinc-400 border-zinc-800";
+                        if (log.category === "AUTHENTICATION") {
+                          badgeColor = "bg-emerald-950/50 text-emerald-400 border-emerald-900/60";
+                        } else if (log.category === "SYSTEM_RESET") {
+                          badgeColor = "bg-rose-950/50 text-rose-400 border-rose-900/60";
+                        } else if (log.category === "WORKER_REGISTRATION") {
+                          badgeColor = "bg-sky-950/50 text-sky-400 border-sky-900/60";
+                        } else if (log.category === "ALARM_CLEARANCE") {
+                          badgeColor = "bg-amber-950/50 text-amber-400 border-amber-900/60";
+                        }
+
+                        return (
+                          <tr 
+                            key={log.id} 
+                            className={`border-b border-border-machina/20 hover:bg-zinc-900/25 transition-colors ${
+                              idx % 2 === 0 ? "bg-[#0b0b0a]/70" : "bg-black/30"
+                            }`}
+                          >
+                            <td className="p-3 pl-4 text-zinc-500 font-bold whitespace-nowrap">
+                              {new Date(log.timestamp).toLocaleString("en-US", {
+                                year: "numeric",
+                                month: "short",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit"
+                              })}
+                            </td>
+                            <td className="p-3">
+                              <span className="text-text-primary block font-black uppercase truncate max-w-[140px]">{log.workerName}</span>
+                              <span className="text-zinc-500 block text-[8px] truncate max-w-[140px]">{log.userEmail}</span>
+                            </td>
+                            <td className="p-3">
+                              <span className="px-1.5 py-0.5 border border-zinc-800/80 bg-zinc-900/40 text-zinc-300 font-black rounded-[1px] text-[7.5px] uppercase">
+                                {log.role}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <span className={`px-1.5 py-0.5 border rounded-[1px] font-black text-[7.5px] uppercase ${badgeColor}`}>
+                                {log.category.replace("_", " ")}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <span className="text-text-primary font-bold block uppercase text-[10px] leading-snug">{log.title}</span>
+                              <span className="text-text-secondary block text-[9px] leading-normal mt-0.5">{log.description}</span>
+                            </td>
+                          </tr>
+                        );
+                      });
+                    } else {
+                      return (
+                        <tr>
+                          <td colSpan={5} className="p-8 text-center text-zinc-600 uppercase text-[9px] leading-relaxed">
+                            No operational transaction logs found matching criteria.<br/>
+                            <span className="text-accent-machina block mt-1 font-black">[ Secure local register with nominal telemetry state ]</span>
+                          </td>
+                        </tr>
+                      );
+                    }
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </IndustrialWidget>
+        )}
+      </div>
+
     </div>
   );
 }

@@ -45,6 +45,7 @@ interface StoreState {
   isSidebarCollapsed: boolean;
   setIsSidebarCollapsed: (collapsed: boolean) => void;
   updateUser: (updatedFields: Partial<User>) => void;
+  trackUserEvent: (title: string, description: string) => void;
 }
 
 // Hydrate the equipment readings with some nice historical curves
@@ -647,7 +648,25 @@ export const useStore = create<StoreState>((set) => ({
     }
   }),
 
-  setActiveTab: (activeTab) => set({ activeTab }),
+  setActiveTab: (activeTab) => set((state) => {
+    if (state.activeTab === activeTab) {
+      return { activeTab };
+    }
+    const triggerUser = state.user;
+    const logRecord: HistoryRecord = {
+      id: generateUniqueId("hist"),
+      timestamp: new Date().toISOString(),
+      userEmail: triggerUser?.email || "anonymous@factorygpt.lan",
+      workerName: triggerUser?.full_name || "Anonymous Operator",
+      role: triggerUser?.role || "Viewer",
+      category: "PAGE_VIEW",
+      title: "VIEWPORT CONSOLE TRANSITION",
+      description: `User routed console terminal access to active viewport [${activeTab.toUpperCase()}].`
+    };
+    const nextHist = [logRecord, ...state.history];
+    saveHistory(nextHist);
+    return { activeTab, history: nextHist };
+  }),
 
   setMode: (mode) => set((state) => {
     localStorage.setItem("factory_gpt_mode", mode);
@@ -1114,10 +1133,26 @@ export const useStore = create<StoreState>((set) => ({
     const nextHist = [...extraLogs, ...state.history];
     saveAttendance(updated);
     saveHistory(nextHist);
-
     return {
       attendance: updated,
       history: nextHist
     };
+  }),
+
+  trackUserEvent: (title, description) => set((state) => {
+    const triggerUser = state.user;
+    const logRecord: HistoryRecord = {
+      id: generateUniqueId("hist"),
+      timestamp: new Date().toISOString(),
+      userEmail: triggerUser?.email || "anonymous@factorygpt.lan",
+      workerName: triggerUser?.full_name || "Anonymous Operator",
+      role: triggerUser?.role || "Viewer",
+      category: "USER_EVENT",
+      title,
+      description
+    };
+    const nextHist = [logRecord, ...state.history];
+    saveHistory(nextHist);
+    return { history: nextHist };
   })
 }));
