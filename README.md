@@ -6,7 +6,7 @@
 █████╗  ███████║██║        ██║   ██║   ██║██████╔╝ ╚████╔╝ ██║       ██║████║║    ██║   
 ██╔══╝  ██╔══██║██║        ██║   ██║   ██║██╔══██╗  ╚██╔╝  ██║  ███║ ██╔═════╝    ██║   
 ██║     ██║  ██║╚██████╗   ██║   ╚██████╔╝██║  ██║   ██║   ╚███████║╗██║          ██║   
-╚═╝     ╚═╝  ╚═╝ ╚═════╝   ╚═╝    ╚═════╝╚═╝  ╚═╝    ╚═╝    ╚═════╝ ╚══╝           ╚═╝   
+╚═╝     ╚═╝  ╚═╝ ╚═════╝   ╚═╝    ╚═════╝╚═╝  ╚═╝    ╚═╝    ╚═════╝ ╚══╝          ╚═╝   
 ```
 
 > **Industrial-grade 3D Digital Twin, Cognitive Operator Diagnostics, and Role-Scoped Intelligence.** Adhering to extreme high-fidelity manufacturing standards, ISO safety frameworks, and enterprise-grade system telemetry.
